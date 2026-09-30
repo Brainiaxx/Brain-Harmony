@@ -5,6 +5,8 @@ from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+
+from . import torch_compat  # noqa: F401  # timm 0.3.2 needs torch._six
 from timm.models.layers import to_3tuple
 
 from libs.flex_patch_embed import FlexiPatchEmbed
@@ -21,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 if is_flash_attn_2_available():
     from .attn_utils.modeling_flash_attention_utils import _flash_attention_forward
+
+_DEFAULT_ATTN_MODE = (
+    "flash_attention_2" if is_flash_attn_2_available() else "eager"
+)
 
 
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):
@@ -226,11 +232,13 @@ class Block(nn.Module):
         drop_path=0.0,
         act_layer=nn.GELU,
         norm_layer=nn.LayerNorm,
-        attn_mode="flash_attention_2",
+        attn_mode=_DEFAULT_ATTN_MODE,
     ):
         super().__init__()
         self.norm1 = norm_layer(dim)
 
+        if attn_mode == "flash_attention_2" and not is_flash_attn_2_available():
+            attn_mode = "eager"
         self.attn = CLIP_ATTENTION_CLASSES[attn_mode](
             dim,
             num_heads=num_heads,
@@ -339,7 +347,7 @@ class VisionTransformerPredictor(nn.Module):
         drop_path_rate=0.0,
         norm_layer=nn.LayerNorm,
         init_std=0.02,
-        attn_mode="flash_attention_2",
+        attn_mode=_DEFAULT_ATTN_MODE,
         **kwargs,
     ):
         super().__init__()
@@ -501,7 +509,7 @@ class FlexVisionTransformer(nn.Module):
         norm_layer=nn.LayerNorm,
         init_std=0.02,
         gradient_checkpointing=False,
-        attn_mode="flash_attention_2",
+        attn_mode=_DEFAULT_ATTN_MODE,
         **kwargs,
     ):
         super().__init__()

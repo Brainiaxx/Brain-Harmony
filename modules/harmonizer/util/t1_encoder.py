@@ -3,10 +3,21 @@ from functools import partial
 import numpy as np
 import torch
 import torch.nn as nn
-from flash_attn import flash_attn_qkvpacked_func
+
+import libs.torch_compat  # noqa: F401  # timm 0.3.2 needs torch._six
 from timm.models.layers import to_3tuple
 
 from modules.harmonizer.util.pos_embed import get_1d_sincos_pos_embed_from_grid
+
+try:
+    from flash_attn import flash_attn_qkvpacked_func
+
+    _FLASH_ATTN_AVAILABLE = True
+except ImportError:
+    flash_attn_qkvpacked_func = None
+    _FLASH_ATTN_AVAILABLE = False
+
+_DEFAULT_ATTN_MODE = "flash_attn" if _FLASH_ATTN_AVAILABLE else "normal"
 
 
 class PatchEmbed(nn.Module):
@@ -49,7 +60,7 @@ class Attention(nn.Module):
         qk_scale=None,
         attn_drop=0.0,
         proj_drop=0.0,
-        attn_mode="flash_attn",
+        attn_mode=_DEFAULT_ATTN_MODE,
     ):
         super().__init__()
         self.num_heads = num_heads
@@ -62,6 +73,8 @@ class Attention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
         self.proj_drop_rate = proj_drop
 
+        if attn_mode == "flash_attn" and not _FLASH_ATTN_AVAILABLE:
+            attn_mode = "normal"
         self.attn_mode = attn_mode
 
     def forward(self, x, return_attn=None):
@@ -165,7 +178,7 @@ class Block(nn.Module):
             qk_scale=qk_scale,
             attn_drop=attn_drop,
             proj_drop=drop,
-            attn_mode="flash_attn",
+            attn_mode=_DEFAULT_ATTN_MODE,
         )
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)
