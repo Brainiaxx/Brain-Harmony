@@ -11,3 +11,13 @@ stage-1:
 
 stage-2:
 	bash scripts/harmonizer/stage2_finetune/run_finetune.sh base 128 AbideI 0
+
+# Paired ABIDE-I T1 and resting-state fMRI (~64 GB) from the public FCP-INDI
+# bucket into data/abide_i/raw/. Re-running resumes files that are already
+# complete. Optional site filter uses the phenotype SITE_ID, for example:
+#   make download-abide SITE=PITT
+SITE ?=
+
+.PHONY: download-abide
+download-abide:
+	python3 -u scripts/download_abide_raw.py $(if $(SITE),--site $(SITE),)
