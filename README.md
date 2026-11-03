@@ -35,6 +35,10 @@ BrainHarmonix/
 └── experiments/                # Training outputs
 ```
 
+## Setup and reproducibility
+
+Local steps for reproducing the ABIDE-I downstream results are logged in [docs/setup-reproducibility.md](docs/setup-reproducibility.md). That note is updated as each step is run. The preprocessing spec is in [docs/abide-preprocess-checklist.md](docs/abide-preprocess-checklist.md).
+
 ## 🚀 Quick Start
 
 ### Environment Setup
