@@ -59,13 +59,13 @@ Re-run `make download-abide` to resume. Files that already match the remote size
 
 ## Not done yet
 
-- [ ] Finish the raw download (524 / 2,265 files, 12.3 / 63.8 GB on disk after the 4 Nov 2026 stop) with `make download-abide`.
+- [x] Finish the raw download (524 / 2,265 files, 12.3 / 63.8 GB on disk after the 4 Nov 2026 stop) with `make download-abide`.
 - [ ] Build `data/abide_i/processed/TR.json` from site TRs, not from the phenotype CSV.
 - [ ] Build `data/abide_i/processed/data_splits.json`.
 - [ ] Preprocess T1 to `{subject}_T1.nii.gz` at 167 × 212 × 160.
 - [ ] Preprocess rest fMRI to `{subject}_Schaefer17n400p.csv.gz`.
 - [ ] Point `configs/harmonizer/stage0_embed/conf_embed_downstream.py` at those folders. The paths are still `/path/to/...`.
-- [ ] Download the Google Drive checkpoints into `checkpoints/harmonix-f/`, `checkpoints/harmonix-s/`, and `checkpoints/harmonizer/`.
+- [x] Download the Google Drive checkpoints into `checkpoints/harmonix-f/`, `checkpoints/harmonix-s/`, and `checkpoints/harmonizer/`.
 - [ ] Run `bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh configs/harmonizer/stage0_embed/conf_embed_downstream.py`.
 - [ ] Point Stage 2 at a local splits file. `modules/harmonizer/stage2_finetune/main_finetune.py` still uses `/scratch/Projects/project_312_HelenZhou/ABIDE1_fMRI_T1/data_splits_seed${split_seed}.json`.
 - [ ] Run `make stage-2` (or `bash scripts/harmonizer/stage2_finetune/run_finetune.sh base 128 AbideI 0`).
