@@ -93,10 +93,10 @@ def get_config():
     config.abide_I_dataset_tr_15 = d(
         name="AbideI",
         split="all",
-        fmri_data_dir="/path/to/ABIDE1_fMRI",
-        T1_data_dir="/path/to/ABIDE1_T1",
-        splits_file="/path/to/data_splits.json",
-        tr_file="/path/to/TR.json",  # Add TR file
+        fmri_data_dir="data/abide_i/processed/fmri",
+        T1_data_dir="data/abide_i/processed/t1",
+        splits_file="data/abide_i/processed/data_splits_seed0.json",
+        tr_file="data/abide_i/processed/TR.json",
         use_subcortical=False,
         tr_min=1.5,
         tr_max=1.55,

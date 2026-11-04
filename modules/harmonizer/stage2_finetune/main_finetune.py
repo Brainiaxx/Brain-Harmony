@@ -271,7 +271,10 @@ def main(args):
 
     if args.dataset_name == "AbideI":
         root_dir = "experiments/stage0_embed/downstream_embed/AbideI"
-        splits_file = f"/scratch/Projects/project_312_HelenZhou/ABIDE1_fMRI_T1/data_splits_seed{args.split_seed}.json"
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        splits_file = os.path.join(
+            repo_root, f"data/abide_i/processed/data_splits_seed{args.split_seed}.json"
+        )
 
     dataset_train = GenerateEmbedDataset_downstream(
         root_dir=root_dir, splits_file=splits_file, split="train"
