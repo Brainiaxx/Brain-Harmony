@@ -95,6 +95,20 @@ Appendix A skull-strips with FreeSurfer, reorients with FSL, affine-registers wi
 | Time and disk | ~6 hours, small final files. | Days for 1,102 subjects. Intermediate 4D volumes can use more than the ~110 GB free. |
 | Reviewer story | A local reimplementation. | The pipeline named in the paper. |
 
+The Hippity-Hoppity Choice:
+
+```
+Yeah, I pick the stand-in, keep the pipeline movin'
+FSL get you closer, but the splits ain't proven
+Seven hundred subjects, and they never said who
+So a perfect skull-strip still won't match the review
+
+Twenty seconds a head, six hours and it's through
+FreeSurfer on the laptop gonna eat the disk too
+Loader wants the crop and the four-hundred line
+Same shapes, same tokens, let the code run fine
+```
+
 The cohort run is waiting on this choice.
 
 ## Not done yet
