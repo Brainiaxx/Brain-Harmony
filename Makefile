@@ -18,6 +18,18 @@ stage-2:
 #   make download-abide SITE=PITT
 SITE ?=
 
-.PHONY: download-abide
+PY ?= $(HOME)/.pyenv/versions/brainharmonix/bin/python
+
+.PHONY: download-abide prepare-abide preprocess-abide
 download-abide:
 	python3 -u scripts/download_abide_raw.py $(if $(SITE),--site $(SITE),)
+
+# TR.json, seed-0 6:2:2 split, and the raw-file manifest.
+prepare-abide:
+	$(PY) -u scripts/prepare_abide_metadata.py
+
+# Cropped T1s and Schaefer-400 time series. Optional: SITE=PITT LIMIT=1 JOBS=1
+LIMIT ?=
+JOBS ?= 1
+preprocess-abide:
+	$(PY) -u scripts/preprocess_abide.py $(if $(SITE),--site $(SITE),) $(if $(LIMIT),--limit $(LIMIT),) --jobs $(JOBS)
