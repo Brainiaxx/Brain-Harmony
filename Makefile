@@ -3,8 +3,10 @@ setup-macos:
 	PYENV_VERSION=brainharmonix pip install -r requirements-macos.txt
 	PYENV_VERSION=brainharmonix pip install -e .
 
+# ABIDE-I downstream embeddings. The UK Biobank pretrain script is
+# scripts/harmonizer/stage0_embed/run_embed_pretrain.sh.
 stage-0:
-	bash scripts/harmonizer/stage0_embed/run_embed_pretrain.sh configs/harmonizer/stage0_embed/conf_embed_pretrain.py
+	bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh configs/harmonizer/stage0_embed/conf_embed_downstream.py
 
 stage-1:
 	bash scripts/harmonizer/stage1_pretrain/run_pretrain.sh base 128

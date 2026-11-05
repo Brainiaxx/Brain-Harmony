@@ -5,11 +5,10 @@ This repo does **not** take raw NIfTIs. `datasets.py` and `configs/harmonizer/st
 Use this for Stage 0 downstream embedding:
 
 ```bash
-bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh \
-  configs/harmonizer/stage0_embed/conf_embed_downstream.py
+make stage-0
 ```
 
-Do **not** use `run_embed_pretrain.sh` for ABIDE. That script is the UK Biobank path.
+That runs `run_embed_downstream.sh`. Do **not** use `run_embed_pretrain.sh` for ABIDE. That script is the UK Biobank path.
 
 The default downstream config sets `use_subcortical=False`, so you only need **Schaefer-400**, not Tian subcortical.
 
@@ -212,8 +211,7 @@ PY
 Then:
 
 ```bash
-bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh \
-  configs/harmonizer/stage0_embed/conf_embed_downstream.py
+make stage-0
 ```
 
 ## Practical order
@@ -222,6 +220,6 @@ bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh \
 2. Download **one site** (PITT or NYU is small and has a clean TR bucket).
 3. Process one subject end-to-end and pass the sanity-check.
 4. Scale to the rest of that site, then the other sites.
-5. Download checkpoints and run `run_embed_downstream.sh`.
+5. Download checkpoints and run `make stage-0`.
 
 T1/fMRI preprocessing needs **FreeSurfer + FSL** (and usually `nilearn` for Schaefer). That is the slow part; the JSON files are the cheap part.

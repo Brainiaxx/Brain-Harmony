@@ -6,7 +6,7 @@ Log of what was actually done to reproduce BrainHarmonix downstream results on A
 
 ## Goal
 
-Run Stage 0 embedding and Stage 2 finetuning on ABIDE-I. Stage 0 pretraining (`run_embed_pretrain.sh`) and Stage 1 are the UK Biobank path and are not part of this reproduction.
+Run Stage 0 embedding and Stage 2 finetuning on ABIDE-I. `make stage-0` is that ABIDE embedding. `make stage-1` and `run_embed_pretrain.sh` are the UK Biobank path and are not part of this reproduction.
 
 The loader in `datasets/datasets.py` does not read raw NIfTIs. It expects parcellated fMRI CSVs, cropped T1s, a splits file, and `TR.json`.
 
@@ -169,7 +169,7 @@ The stand-in was the choice used for the cohort run above.
 ## Not done yet
 
 - [x] Accept the 1,036 complete pairs. The seed-0 split now lists only subjects with both outputs. A rerun of the current preprocess script still fails the same 66.
-- [ ] Run Stage 0: `bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh configs/harmonizer/stage0_embed/conf_embed_downstream.py`
+- [ ] Run Stage 0: `make stage-0`
 - [ ] Run Stage 2: `make stage-2`
 
 ## Disk
@@ -197,9 +197,8 @@ make prepare-abide
 # The 2026-11-05 run left 1,036 complete and 66 failed.
 make preprocess-abide JOBS=2
 
-bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh \
-  configs/harmonizer/stage0_embed/conf_embed_downstream.py
+make stage-0
 make stage-2
 ```
 
-`make stage-2` is `bash scripts/harmonizer/stage2_finetune/run_finetune.sh base 128 AbideI 0`. Stage 0 and Stage 2 need the cohort outputs and a GPU. `make stage-0` and `make stage-1` are the UK Biobank path.
+`make stage-0` extracts ABIDE embeddings with `run_embed_downstream.sh`. `make stage-2` is `bash scripts/harmonizer/stage2_finetune/run_finetune.sh base 128 AbideI 0`. Both need the cohort outputs and a GPU. `make stage-1` is still the UK Biobank pretrain.
