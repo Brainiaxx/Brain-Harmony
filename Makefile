@@ -25,6 +25,7 @@ download-abide:
 	python3 -u scripts/download_abide_raw.py $(if $(SITE),--site $(SITE),)
 
 # TR.json, seed-0 6:2:2 split, and the raw-file manifest.
+# preprocess-abide removes subjects that still lack both outputs from this split.
 prepare-abide:
 	$(PY) -u scripts/prepare_abide_metadata.py
 
