@@ -122,7 +122,7 @@ The 17 saved a T1 and then failed the atlas check: fewer than 60 of 400 regions 
 
 Complete sites: Caltech, SBL, Stanford, Trinity, UM_1, UM_2. The largest gaps are UCLA_2 (16/26), MaxMun (47/57), SDSU (30/36), and UCLA_1 (66/73). CMU, after the recenter fix, was 13/14 and 12/13.
 
-Running `make preprocess-abide JOBS=2` again skips the 1,036 finished subjects and retries the 66.
+A second `make preprocess-abide JOBS=2` does not recover these 66. It skips the 1,036 finished subjects and runs the same checks on the rest: the skull-strip volume gate and the 60-ROI atlas gate are deterministic, so the same subjects fail again. Recovering any of them means changing those checks or the registration, then rerunning.
 
 ## Preprocessing choice
 
@@ -155,7 +155,7 @@ The stand-in was the choice used for the cohort run above.
 
 ## Not done yet
 
-- [ ] Retry the 66 subjects that failed `make preprocess-abide`, or accept the 1,036 complete pairs.
+- [ ] Accept the 1,036 complete pairs, or change the skull-strip / atlas checks and rerun the 66. A rerun of the current script fails the same subjects.
 - [ ] Run Stage 0: `bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh configs/harmonizer/stage0_embed/conf_embed_downstream.py`
 - [ ] Run Stage 2: `make stage-2`
 
@@ -181,6 +181,7 @@ make prepare-abide
 
 # Cohort. Skips subjects that already have both outputs.
 # The 2026-11-05 run left 1,036 complete and 66 failed.
+# Those 66 fail the same checks again unless the script changes.
 make preprocess-abide JOBS=2
 
 bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh \
