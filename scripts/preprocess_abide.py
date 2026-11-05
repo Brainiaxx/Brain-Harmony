@@ -455,8 +455,49 @@ def main() -> None:
                     print(f"[{index}/{len(records)}] FAIL {record['id']}: {exc}", flush=True)
                 else:
                     print(f"[{index}/{len(records)}] {message}", flush=True)
+    update_splits(records)
     if failures:
         raise SystemExit(f"{failures} subjects failed")
+
+
+def has_processed_outputs(subject_id: str) -> bool:
+    """True when the loader can open both files for this subject."""
+    sid = subject_id.split("-")[-1]
+    t1 = ROOT / "processed" / "t1" / f"{sid}_T1.nii.gz"
+    fmri = ROOT / "processed" / "fmri" / sid / f"{sid}_Schaefer17n400p.csv.gz"
+    return t1.is_file() and fmri.is_file()
+
+
+def update_splits(records: list[dict]) -> None:
+    """Drop attempted subjects that still lack both outputs from the seed-0 split.
+
+    Subjects this run did not attempt stay put, so a one-site run does not empty the split.
+    """
+    splits_path = ROOT / "processed" / "data_splits_seed0.json"
+    if not splits_path.is_file():
+        print(f"no split to update at {splits_path}", flush=True)
+        return
+    splits = json.loads(splits_path.read_text())
+    attempted = {row["id"] for row in records}
+    updated: dict[str, list[dict]] = {}
+    removed: list[tuple[str, dict]] = []
+    for name, rows in splits.items():
+        updated[name] = []
+        for row in rows:
+            if row["id"] in attempted and not has_processed_outputs(row["id"]):
+                removed.append((name, row))
+            else:
+                updated[name].append(row)
+    if not removed:
+        print(
+            "seed-0 split already excludes attempted subjects that lack both outputs",
+            flush=True,
+        )
+        return
+    splits_path.write_text(json.dumps(updated, indent=2) + "\n")
+    print(f"removed {len(removed)} attempted subjects from {splits_path.name}", flush=True)
+    for name, row in removed:
+        print(f"  {name}  {row['id']}", flush=True)
 
 
 if __name__ == "__main__":

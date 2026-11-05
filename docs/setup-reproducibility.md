@@ -65,7 +65,7 @@ Present on disk:
 - `data/abide_i/processed/data_splits_seed0.json`
 - `data/abide_i/processed/manifest.json`
 
-1,102 subjects have both a T1 and a rest scan (531 ASD, 571 control). The seed-0 split is stratified by site and diagnosis, `n // 5` each to val and test: 692 / 205 / 205. This is a local split. It is not the paper's unpublished split.
+1,102 subjects have both a T1 and a rest scan (531 ASD, 571 control). The seed-0 split is stratified by site and diagnosis, `n // 5` each to val and test: 692 / 205 / 205. This is a local split. It is not the paper's unpublished split. `make preprocess-abide` rewrites this file at the end and removes attempted subjects that still lack both outputs. The reduced counts are in the cohort section below.
 
 TR is per scanner. CMU does not share one value: `CMU_a` is 2.0 s and `CMU_b` is 1.5 s, so those subjects use the BIDS folder as the site key. Every kept site falls in a Stage 0 bucket. Subjects with more than one rest run (28, all OHSU) are listed in the manifest as run-1, otherwise the lowest run number.
 
@@ -124,6 +124,19 @@ Complete sites: Caltech, SBL, Stanford, Trinity, UM_1, UM_2. The largest gaps ar
 
 A second `make preprocess-abide JOBS=2` does not recover these 66. It skips the 1,036 finished subjects and runs the same checks on the rest: the skull-strip volume gate and the 60-ROI atlas gate are deterministic, so the same subjects fail again. Recovering any of them means changing those checks or the registration, then rerunning.
 
+### 2026-11-05 — Split reduced to complete pairs
+
+Stage 0 opens a Schaefer CSV for every id in `data_splits_seed0.json`. At the end of `make preprocess-abide`, subjects from that run who still lack a cropped T1 or a Schaefer CSV are removed. A `--site` or `--subject` run only removes people it attempted. Remaining subjects keep the fold they had in the 1,102-subject split.
+
+| Split | Subjects | ASD | Control |
+|---|---:|---:|---:|
+| train | 655 | 319 | 336 |
+| val | 187 | 89 | 98 |
+| test | 194 | 93 | 101 |
+| Total | 1,036 | 501 | 535 |
+
+`make prepare-abide` writes the full 692 / 205 / 205 split again. The next `make preprocess-abide` removes the failures once more.
+
 ## Preprocessing choice
 
 Appendix A skull-strips with FreeSurfer, reorients with FSL, affine-registers with FLIRT, motion-corrects with `mcflirt`, and coregisters with `bbregister`, then regresses voxelwise nuisance signals. The stand-in erodes a head mask, registers with SimpleITK to the MNI152NLin6Asym 1 mm brain template, crops the same 167 × 212 × 160 window, drops the first 4 volumes, rigid-aligns each volume, and regresses global, WM, and CSF signals on the ROI time series.
@@ -155,7 +168,7 @@ The stand-in was the choice used for the cohort run above.
 
 ## Not done yet
 
-- [ ] Accept the 1,036 complete pairs, or change the skull-strip / atlas checks and rerun the 66. A rerun of the current script fails the same subjects.
+- [x] Accept the 1,036 complete pairs. The seed-0 split now lists only subjects with both outputs. A rerun of the current preprocess script still fails the same 66.
 - [ ] Run Stage 0: `bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh configs/harmonizer/stage0_embed/conf_embed_downstream.py`
 - [ ] Run Stage 2: `make stage-2`
 
@@ -179,9 +192,9 @@ make setup-macos
 make download-abide
 make prepare-abide
 
-# Cohort. Skips subjects that already have both outputs.
+# Skips finished subjects. At the end, removes attempted subjects that
+# still lack both outputs from data_splits_seed0.json.
 # The 2026-11-05 run left 1,036 complete and 66 failed.
-# Those 66 fail the same checks again unless the script changes.
 make preprocess-abide JOBS=2
 
 bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh \
