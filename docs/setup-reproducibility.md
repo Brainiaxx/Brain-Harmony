@@ -78,7 +78,11 @@ FreeSurfer and FSL are not installed. `scripts/preprocess_abide.py` was written 
 - `data/abide_i/processed/t1/0050002_T1.nii.gz` — shape 167 × 212 × 160
 - `data/abide_i/processed/fmri/0050002/0050002_Schaefer17n400p.csv.gz` — shape 400 × 196, 73 ROIs empty
 
-The empty ROIs match a short slab: that rest scan covers 116 mm. The cohort has not been preprocessed. About 20 seconds per subject, so all 1,102 would be on the order of 6 hours at one job.
+The empty ROIs match a short slab: that rest scan covers 116 mm. Caltech is similar (119 mm) and usually leaves 260–320 of 400 ROIs empty. A first cohort run rejected those subjects at a cutoff of 250 empty ROIs. The cutoff is now 340 empty ROIs (fewer than 60 regions found), which still stops a registration that missed the brain.
+
+CMU is a different failure. The rest-scan header places the volume about 400–550 mm away from the T1, so the atlas missed every ROI. Yale is off by about 80 mm. The bold image is now recentered on the T1 before the rigid step. A check on CMU `0050642` then found 376 of 400 ROIs. The cohort process that was already running does not pick up that change, so CMU stays failed until a rerun. A rerun skips subjects that already have both output files.
+
+A few skull strips also fall outside 700–2200 ml (CMU `0050659`, `0050655`; KKI `0050789`, `0050790`) and are skipped. About 20 seconds per subject, so all 1,102 would be on the order of 6 hours at one job.
 
 Installing the stand-in also put `nilearn`, `SimpleITK`, `surfa`, and `scikit-image` into the `brainharmonix` environment and upgraded `pandas` (2.2.3 → 2.3.3) and `packaging` (25 → 26.3). Those packages are not in `requirements-macos.txt`.
 
