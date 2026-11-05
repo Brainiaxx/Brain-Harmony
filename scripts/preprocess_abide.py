@@ -127,6 +127,22 @@ def brain_mask(data: np.ndarray, zooms: tuple[float, float, float]) -> np.ndarra
     return ndimage.binary_fill_holes(brain)
 
 
+def recenter_on(moving: sitk.Image, fixed: sitk.Image) -> None:
+    """Put the moving volume's center on the fixed volume's center.
+
+    CMU (and Yale) store the rest scan hundreds of millimetres away from the
+    T1. Rigid registration then never sees the brain, and every ROI is empty.
+    """
+    fixed_center = np.array(
+        fixed.TransformContinuousIndexToPhysicalPoint(tuple((np.array(fixed.GetSize(), dtype=float) - 1) / 2))
+    )
+    moving_center = np.array(
+        moving.TransformContinuousIndexToPhysicalPoint(tuple((np.array(moving.GetSize(), dtype=float) - 1) / 2))
+    )
+    origin = np.array(moving.GetOrigin()) + (fixed_center - moving_center)
+    moving.SetOrigin(tuple(float(value) for value in origin))
+
+
 def register(fixed: sitk.Image, moving: sitk.Image, dof: str) -> sitk.Transform:
     method = sitk.ImageRegistrationMethod()
     method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=32)
@@ -218,9 +234,10 @@ def extract_rois(bold: np.ndarray, labels: np.ndarray) -> np.ndarray:
             continue
         series[roi - 1] = voxels.mean(axis=0)
     empty = int(np.sum(np.all(series == 0, axis=1)))
-    # Thick-slice ABIDE slabs do not cover every cortical ROI. A majority of
-    # empty labels means the atlas missed the brain.
-    if empty > 250:
+    # Short ABIDE slabs leave a lot of cortex outside the field of view.
+    # Caltech covers about 119 mm and typically hits only 80–150 of 400 ROIs.
+    # Fewer than 60 means the atlas missed the brain.
+    if 400 - empty < 60:
         raise RuntimeError(f"{empty} Schaefer ROIs were empty after registration")
     return series
 
@@ -323,6 +340,8 @@ def process_subject(record: dict, work_root: Path) -> str:
     t1_sitk = sitk.ReadImage(str(stripped_path), sitk.sitkFloat32)
     mean_bold = sitk.GetImageFromArray(np.transpose(corrected.mean(axis=3), (2, 1, 0)))
     mean_bold.CopyInformation(reference)
+    recenter_on(reference, t1_sitk)
+    mean_bold.SetOrigin(reference.GetOrigin())
     bold_to_t1 = register(t1_sitk, mean_bold, "rigid")
 
     def resample_mask(mask_array: np.ndarray) -> np.ndarray:
