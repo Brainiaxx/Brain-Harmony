@@ -80,11 +80,49 @@ FreeSurfer and FSL are not installed. `scripts/preprocess_abide.py` was written 
 
 The empty ROIs match a short slab: that rest scan covers 116 mm. Caltech is similar (119 mm) and usually leaves 260–320 of 400 ROIs empty. A first cohort run rejected those subjects at a cutoff of 250 empty ROIs. The cutoff is now 340 empty ROIs (fewer than 60 regions found), which still stops a registration that missed the brain.
 
-CMU is a different failure. The rest-scan header places the volume about 400–550 mm away from the T1, so the atlas missed every ROI. Yale is off by about 80 mm. The bold image is now recentered on the T1 before the rigid step. A check on CMU `0050642` then found 376 of 400 ROIs. The cohort process that was already running does not pick up that change, so CMU stays failed until a rerun. A rerun skips subjects that already have both output files.
-
-A few skull strips also fall outside 700–2200 ml (CMU `0050659`, `0050655`; KKI `0050789`, `0050790`) and are skipped. About 20 seconds per subject, so all 1,102 would be on the order of 6 hours at one job.
+CMU is a different failure. The rest-scan header places the volume about 400–550 mm away from the T1, so the atlas missed every ROI. Yale is off by about 80 mm. The bold image is now recentered on the T1 before the rigid step. A check on CMU `0050642` then found 376 of 400 ROIs. A rerun skips subjects that already have both output files.
 
 Installing the stand-in also put `nilearn`, `SimpleITK`, `surfa`, and `scikit-image` into the `brainharmonix` environment and upgraded `pandas` (2.2.3 → 2.3.3) and `packaging` (25 → 26.3). Those packages are not in `requirements-macos.txt`.
+
+### 2026-11-05 — Cohort preprocessing run
+
+`make preprocess-abide JOBS=2` walked all 1,102 manifest subjects and exited with an error because 66 failed. **1,036 subjects have both a cropped T1 and a Schaefer CSV.**
+
+| Outcome | Subjects |
+|---|---:|
+| Both files written | 1,036 |
+| T1 written, fMRI rejected | 17 |
+| Nothing written | 49 |
+
+The 17 saved a T1 and then failed the atlas check: fewer than 60 of 400 regions fell inside the rest scan. The 49 failed earlier, mostly because the skull-strip volume was outside 700–2,200 ml, so no files were kept.
+
+| Site | Saved | Of |
+|---|---:|---:|
+| CALTECH | 38 | 38 |
+| CMU_a | 13 | 14 |
+| CMU_b | 12 | 13 |
+| KKI | 51 | 55 |
+| LEUVEN_1 | 26 | 29 |
+| LEUVEN_2 | 33 | 35 |
+| MAX_MUN | 47 | 57 |
+| NYU | 182 | 184 |
+| OHSU | 25 | 28 |
+| OLIN | 31 | 36 |
+| PITT | 54 | 57 |
+| SBL | 30 | 30 |
+| SDSU | 30 | 36 |
+| STANFORD | 40 | 40 |
+| TRINITY | 49 | 49 |
+| UCLA_1 | 66 | 73 |
+| UCLA_2 | 16 | 26 |
+| UM_1 | 110 | 110 |
+| UM_2 | 35 | 35 |
+| USM | 96 | 101 |
+| YALE | 52 | 56 |
+
+Complete sites: Caltech, SBL, Stanford, Trinity, UM_1, UM_2. The largest gaps are UCLA_2 (16/26), MaxMun (47/57), SDSU (30/36), and UCLA_1 (66/73). CMU, after the recenter fix, was 13/14 and 12/13.
+
+Running `make preprocess-abide JOBS=2` again skips the 1,036 finished subjects and retries the 66.
 
 ## Preprocessing choice
 
@@ -113,11 +151,11 @@ Loader wants the crop and the four-hundred line
 Same shapes, same tokens, let the code run fine
 ```
 
-The cohort run is waiting on this choice.
+The stand-in was the choice used for the cohort run above.
 
 ## Not done yet
 
-- [ ] Choose the stand-in or FreeSurfer + FSL, then preprocess the cohort.
+- [ ] Retry the 66 subjects that failed `make preprocess-abide`, or accept the 1,036 complete pairs.
 - [ ] Run Stage 0: `bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh configs/harmonizer/stage0_embed/conf_embed_downstream.py`
 - [ ] Run Stage 2: `make stage-2`
 
@@ -141,11 +179,9 @@ make setup-macos
 make download-abide
 make prepare-abide
 
-# One subject. Pitt 0050002 is the subject already on disk.
-make preprocess-abide SITE=PITT LIMIT=1
-
-# Cohort, only after choosing the stand-in. About 6 hours at JOBS=1.
-# make preprocess-abide JOBS=1
+# Cohort. Skips subjects that already have both outputs.
+# The 2026-11-05 run left 1,036 complete and 66 failed.
+make preprocess-abide JOBS=2
 
 bash scripts/harmonizer/stage0_embed/run_embed_downstream.sh \
   configs/harmonizer/stage0_embed/conf_embed_downstream.py
