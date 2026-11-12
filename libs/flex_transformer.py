@@ -101,9 +101,10 @@ class Attention(nn.Module):
 
     def forward(self, x, attention_mask, output_attentions=False):
         if attention_mask is not None:
-            from attn_utils import expand_mask
+            #from attn_utils import expand_mask
+            from .attn_utils.expand_mask import _expand_mask
 
-            attention_mask = expand_mask(attention_mask, x.dtype)
+            attention_mask = _expand_mask(attention_mask, x.dtype)
 
         B, N, C = x.shape
         qkv = (
@@ -128,7 +129,7 @@ class Attention(nn.Module):
                 raise ValueError(
                     f"Attention mask should be of size {(B, 1, N, src_len)}, but is {attention_mask.size()}"
                 )
-            breakpoint()
+            #breakpoint()
             attn = attn + attention_mask
 
         attn = attn.softmax(dim=-1)

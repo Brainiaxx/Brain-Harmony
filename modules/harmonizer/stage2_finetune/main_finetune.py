@@ -1,4 +1,3 @@
-
 import argparse
 import csv
 import datetime
@@ -9,8 +8,19 @@ import time
 from pathlib import Path
 
 import numpy as np
-import timm
+
+# --- PYTORCH 2.0 TIMM 0.3.2 COMPATIBILITY PATCH ---
+import sys
+import collections.abc
+import types
 import torch
+if not hasattr(torch, '_six'):
+    mock_six = types.ModuleType('torch._six')
+    mock_six.container_abcs = collections.abc
+    sys.modules['torch._six'] = mock_six
+# --------------------------------------------------
+
+import timm
 import torch.backends.cudnn as cudnn
 from timm.data.mixup import Mixup
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy

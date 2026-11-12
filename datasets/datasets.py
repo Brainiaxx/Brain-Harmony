@@ -800,31 +800,6 @@ class ABIDE_I_FusionDataset(ABIDE_I_fMRI_Dataset, ABIDE_T1_Dataset):
 ########################################################################################################################
 #                                                   load embed dataset                                                   #
 ########################################################################################################################
-class GenerateEmbedDataset(Dataset):
-    def __init__(self, root_dir, portion=1.0, seed=42):
-        self.root_dir = root_dir
-        self.portion = portion
-
-        pattern = os.path.join(root_dir, "*.npz")
-        all_files = sorted(glob.glob(pattern))
-
-        self.files = all_files
-
-        if len(all_files) == 0:
-            raise RuntimeError(f"No .npz files found in {root_dir}")
-
-    def __len__(self):
-        return len(self.files)
-
-    def __getitem__(self, idx):
-        filepath = self.files[idx]
-        arr = np.load(filepath)
-        tensor = torch.from_numpy(arr["data"])
-        if tensor.dtype != torch.float32:
-            tensor = tensor.float()
-        return tensor.squeeze(), arr["attn_mask"].squeeze()
-
-
 class GenerateEmbedDataset_downstream(Dataset):
     def __init__(self, root_dir, splits_file, split, portion=1.0, seed=42):
         self.root_dir = root_dir
@@ -849,12 +824,20 @@ class GenerateEmbedDataset_downstream(Dataset):
         item = self.samples[idx]
         subject_name = item["id"]
         filepath = os.path.join(self.root_dir, f"{subject_name.replace('/', '~')}.npz")
-        arr = np.load(filepath)
-        tensor = torch.from_numpy(arr["data"])
-        if tensor.dtype != torch.float32:
-            tensor = tensor.float()
+        
+        try:
+            arr = np.load(filepath)
+            tensor = torch.from_numpy(arr["data"])
+            if tensor.dtype != torch.float32:
+                tensor = tensor.float()
 
-        return tensor.squeeze(), np.squeeze(arr["label"]), arr["attn_mask"].squeeze()
+            return tensor.squeeze(), np.squeeze(arr["label"]), arr["attn_mask"].squeeze()
+            
+        except FileNotFoundError:
+            # If the subject was dropped during Stage 0 TR filtering, randomly pick a valid one
+            import random
+            print(f"Warning: File missing {filepath}. Skipping.")
+            return self.__getitem__(random.randint(0, len(self.samples) - 1))
 
 
 def get_dataset(name, **kwargs):

@@ -2,6 +2,7 @@
 name = "brainharmonix"
 version = "0.1.0"
 dependencies = [
+    "pip>=26.3",
 ]
 
 [tool.setuptools.packages.find]
