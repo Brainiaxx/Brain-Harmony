@@ -13,8 +13,9 @@ module load Anaconda3
 conda create --name brainharmonix
 source activate brainharmonix
 
-echo "Installing Pytorch with CUDA 11.8"
-conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
-
 echo "Installing additional dependencies"
 pip install -r requirements-macos.txt
+
+echo "Installing Pytorch with CUDA 11.8"
+pip install torch==2.5.1+cu118 torchvision==0.20.1+cu118 torchaudio==2.5.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
