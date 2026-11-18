@@ -18,11 +18,15 @@ source activate brainharmonix
 echo "Run finetuning"
 export PYTHONPATH="$PWD"
 accelerate launch modules/harmonizer/stage2_finetune/main_finetune.py \
+    --model vit_base_patch16 \
+    --finetune checkpoints/harmonizer/model.pth \
     --dataset_name AbideI \
     --nb_classes 2 \
     --split_seed 0 \
     --batch_size 16 \
     --num_workers 4 \
     --epochs 50 \
+    --lr 5e-4 --layer_decay 0.65 \
+    --weight_decay 0.05 --drop_path 0.1 \
     --output_dir experiments/stage2_finetune/AbideI \
     --log_dir experiments/stage2_finetune/AbideI
