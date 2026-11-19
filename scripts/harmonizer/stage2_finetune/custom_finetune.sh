@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=brainharmonix-embed
+#SBATCH --job-name=brainharmonix-finetune
 #SBATCH --output=logs/finetune.%j.out
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
