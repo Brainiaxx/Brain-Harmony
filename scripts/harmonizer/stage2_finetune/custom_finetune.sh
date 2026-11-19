@@ -17,6 +17,7 @@ source activate brainharmonix
 # Run
 echo "Run finetuning"
 export PYTHONPATH="$PWD"
+unset SLURM_PROCID
 accelerate launch modules/harmonizer/stage2_finetune/main_finetune.py \
     --model vit_base_patch16 \
     --finetune checkpoints/harmonizer/model.pth \
