@@ -24,7 +24,8 @@ accelerate launch modules/harmonizer/stage2_finetune/main_finetune.py \
     --dataset_name AbideI \
     --nb_classes 2 \
     --split_seed 0 \
-    --batch_size 16 \
+    --batch_size 2 \
+    --accum_iter 8 \
     --num_workers 4 \
     --epochs 50 \
     --lr 5e-4 --layer_decay 0.65 \
