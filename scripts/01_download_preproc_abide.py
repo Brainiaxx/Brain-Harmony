@@ -12,15 +12,23 @@ os.makedirs(os.path.join(RAW_DIR, "fmri"), exist_ok=True)
 os.makedirs(os.path.join(RAW_DIR, "t1"), exist_ok=True)
 
 def download_file(url, dest_path):
-    if os.path.exists(dest_path): return True
+    if os.path.exists(dest_path) and os.path.getsize(dest_path) > 0:
+        return True
     try:
-        r = requests.get(url, stream=True, timeout=15)
-        if r.status_code == 200:
-            with open(dest_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192): f.write(chunk)
-            return True
+        r = requests.get(url, stream=True, timeout=30)
+        if r.status_code != 200:
+            return False
+        partial = dest_path + ".partial"
+        with open(partial, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        os.replace(partial, dest_path)
+        return os.path.getsize(dest_path) > 0
+    except Exception:
+        if os.path.exists(dest_path + ".partial"):
+            os.remove(dest_path + ".partial")
         return False
-    except: return False
 
 def main():
     pheno_path = os.path.join(RAW_DIR, "ABIDE_Phenotype.csv")
@@ -41,14 +49,21 @@ def main():
         func_url = f"{BASE_URL}/Outputs/cpac/filt_global/func_preproc/{fid}_func_preproc.nii.gz"
         tasks.append((func_url, os.path.join(RAW_DIR, "fmri", f"{fid}_func.nii.gz")))
         
-        # T1: ANTs 3D Voxel-wise Cortical Thickness Volume
-        anat_url = f"{BASE_URL}/Outputs/ants/anat_thickness/{fid}_anat_thickness.nii.gz"
-        tasks.append((anat_url, os.path.join(RAW_DIR, "t1", f"{fid}_anat.nii.gz")))
+        # Skull-stripped T1 from the FreeSurfer 5.1 release. The C-PAC
+        # anatomical volume in MNI space was not published; ANTs thickness
+        # is a different contrast from the T1 the model was trained on.
+        anat_url = f"{BASE_URL}/Outputs/freesurfer/5.1/{fid}/mri/brain.mgz"
+        tasks.append((anat_url, os.path.join(RAW_DIR, "t1", f"{fid}_brain.mgz")))
 
     print(f"Downloading {len(tasks)} files concurrently...")
+    failed = []
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(download_file, url, dest) for url, dest in tasks]
-        for _ in tqdm(as_completed(futures), total=len(futures)): pass
+        futures = {executor.submit(download_file, url, dest): url for url, dest in tasks}
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            if not future.result():
+                failed.append(futures[future])
+    if failed:
+        print(f"{len(failed)} downloads failed. First: {failed[0]}")
 
 if __name__ == "__main__":
     main()
